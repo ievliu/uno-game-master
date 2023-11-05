@@ -1,55 +1,67 @@
-import { GameHistory } from "@uno-game/protocols"
+import { GameHistory } from "@uno-game/protocols";
 
-import GameService from "@/Services/GameService"
+import GameService from "@/Services/GameService";
 
-import GameHistoryRepository from "@/Repositories/GameHistoryRepository"
+import GameHistoryRepository from "@/Repositories/GameHistoryRepository";
 
 class GameHistoryService {
-	async retrieveGameHistory (playerId: string): Promise<GameHistory[]> {
-		const gameHistory = await this.consolidateGameHistory(playerId)
+    async retrieveGameHistory(playerId: string): Promise<GameHistory[]> {
+        const gameHistory = await this.consolidateGameHistory(playerId);
 
-		return gameHistory
-	}
+        return gameHistory;
+    }
 
-	private async consolidateGameHistory (playerId: string): Promise<GameHistory[]> {
-		const gameHistory = await GameHistoryRepository.getGameHistory(playerId) || []
+    private async consolidateGameHistory(
+        playerId: string
+    ): Promise<GameHistory[]> {
+        const gameHistory =
+            (await GameHistoryRepository.getGameHistory(playerId)) || [];
 
-		const consolidatedGameHistory: GameHistory[] = []
+        const consolidatedGameHistory: GameHistory[] = [];
 
-		const games = await GameService.getGameList()
+        const games = await GameService.getGameList();
 
-		gameHistory
-			.forEach(history => {
-				const game = games.find(game => game.id === history.gameId)
+        gameHistory.forEach((history) => {
+            const game = games.find((game) => game.id === history.gameId);
 
-				if (game) {
-					consolidatedGameHistory.push({
-						createdAt: game.createdAt,
-						gameId: game.id,
-						name: game.title,
-						playersCount: game.players.length,
-						status: game.status,
-					})
-				}
-			})
+            if (game) {
+                consolidatedGameHistory.push({
+                    createdAt: game.createdAt,
+                    gameId: game.id,
+                    name: game.title,
+                    playersCount: game.players.length,
+                    status: game.status,
+                });
+            }
+        });
 
-		games
-			.filter(game => game.players.some(player => player.id === playerId))
-			.filter(game => !consolidatedGameHistory.some(history => history.gameId === game.id))
-			.forEach(game => {
-				consolidatedGameHistory.push({
-					createdAt: game.createdAt,
-					gameId: game.id,
-					name: game.title,
-					playersCount: game.players.length,
-					status: game.status,
-				})
-			})
+        games
+            .filter((game) =>
+                game.players.some((player) => player.id === playerId)
+            )
+            .filter(
+                (game) =>
+                    !consolidatedGameHistory.some(
+                        (history) => history.gameId === game.id
+                    )
+            )
+            .forEach((game) => {
+                consolidatedGameHistory.push({
+                    createdAt: game.createdAt,
+                    gameId: game.id,
+                    name: game.title,
+                    playersCount: game.players.length,
+                    status: game.status,
+                });
+            });
 
-		await GameHistoryRepository.setGameHistory(playerId, consolidatedGameHistory)
+        await GameHistoryRepository.setGameHistory(
+            playerId,
+            consolidatedGameHistory
+        );
 
-		return consolidatedGameHistory
-	}
+        return consolidatedGameHistory;
+    }
 }
 
-export default new GameHistoryService()
+export default new GameHistoryService();

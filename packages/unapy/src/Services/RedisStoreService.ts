@@ -1,101 +1,98 @@
-import CacheService from "@/Services/CacheService"
+import CacheService from "@/Services/CacheService";
 
-import { Store } from "@/Protocols/StoreProtocol"
+import { Store } from "@/Protocols/StoreProtocol";
 
 /**
  * This store is backed by Redis, so it is fast and supposed
  * to be persisted.
  */
 class RedisStoreService<Model> implements Store<Model> {
-	private namespace: string
-	private separator = ":"
+    private namespace: string;
+    private separator = ":";
 
-	constructor (namespace: string) {
-		this.namespace = namespace
-	}
+    constructor(namespace: string) {
+        this.namespace = namespace;
+    }
 
-	async set (id: string, data: Model): Promise<void> {
-		const key = this.mountKey(id)
+    async set(id: string, data: Model): Promise<void> {
+        const key = this.mountKey(id);
 
-		await CacheService.set(
-			key,
-			data as Record<string, unknown>,
-		)
-	}
+        await CacheService.set(key, data as Record<string, unknown>);
+    }
 
-	async delete (id: string): Promise<void> {
-		const key = this.mountKey(id)
+    async delete(id: string): Promise<void> {
+        const key = this.mountKey(id);
 
-		await CacheService.delete(key)
-	}
+        await CacheService.delete(key);
+    }
 
-	async getOne (id: string): Promise<Model> {
-		const key = this.mountKey(id)
+    async getOne(id: string): Promise<Model> {
+        const key = this.mountKey(id);
 
-		const model = await CacheService.get(key)
+        const model = await CacheService.get(key);
 
-		return model as Model
-	}
+        return model as Model;
+    }
 
-	async getAll (): Promise<Model[]> {
-		const models: Model[] = []
+    async getAll(): Promise<Model[]> {
+        const models: Model[] = [];
 
-		const cacheKeys = await this.getAllCacheKeys()
+        const cacheKeys = await this.getAllCacheKeys();
 
-		await Promise.all(
-			cacheKeys.map(async cacheKey => {
-				const model = await CacheService.get(cacheKey) as Model
+        await Promise.all(
+            cacheKeys.map(async (cacheKey) => {
+                const model = (await CacheService.get(cacheKey)) as Model;
 
-				models.push(model)
-			}),
-		)
+                models.push(model);
+            })
+        );
 
-		return models
-	}
+        return models;
+    }
 
-	async getKeys (): Promise<string[]> {
-		const cacheKeys = await this.getAllCacheKeys()
+    async getKeys(): Promise<string[]> {
+        const cacheKeys = await this.getAllCacheKeys();
 
-		const keys = cacheKeys.map(cacheKey => {
-			const [, key] = cacheKey.split(this.separator)
+        const keys = cacheKeys.map((cacheKey) => {
+            const [, key] = cacheKey.split(this.separator);
 
-			return key
-		})
+            return key;
+        });
 
-		return keys
-	}
+        return keys;
+    }
 
-	async getAllInMap (): Promise<Map<string, Model>> {
-		const modelMap = new Map<string, Model>()
+    async getAllInMap(): Promise<Map<string, Model>> {
+        const modelMap = new Map<string, Model>();
 
-		const cacheKeys = await this.getAllCacheKeys()
+        const cacheKeys = await this.getAllCacheKeys();
 
-		await Promise.all(
-			cacheKeys.map(async cacheKey => {
-				const [, key] = cacheKey.split(this.separator)
+        await Promise.all(
+            cacheKeys.map(async (cacheKey) => {
+                const [, key] = cacheKey.split(this.separator);
 
-				const model = await CacheService.get(cacheKey) as Model
+                const model = (await CacheService.get(cacheKey)) as Model;
 
-				modelMap.set(key, model)
-			}),
-		)
+                modelMap.set(key, model);
+            })
+        );
 
-		return modelMap
-	}
+        return modelMap;
+    }
 
-	private mountKey (modelId: string): string {
-		const key = `${this.namespace}${this.separator}${modelId}`
+    private mountKey(modelId: string): string {
+        const key = `${this.namespace}${this.separator}${modelId}`;
 
-		return key
-	}
+        return key;
+    }
 
-	private async getAllCacheKeys (): Promise<string[]> {
-		const wildCardKey = this.mountKey("*")
+    private async getAllCacheKeys(): Promise<string[]> {
+        const wildCardKey = this.mountKey("*");
 
-		const cacheKeys = await CacheService.getKeysByPattern(wildCardKey)
+        const cacheKeys = await CacheService.getKeysByPattern(wildCardKey);
 
-		return cacheKeys
-	}
+        return cacheKeys;
+    }
 }
 
-export default RedisStoreService
+export default RedisStoreService;
