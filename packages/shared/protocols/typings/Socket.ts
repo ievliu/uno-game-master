@@ -8,6 +8,7 @@ import { Player, PlayerData, PlayerEvents, PlayerStatus } from "./Player"
 export type SocketServerEvents =
 "SetPlayerData" |
 "CreateGame" |
+"CreateSuperGame" |
 "JoinGame" |
 "BuyCard" |
 "PutCard" |
@@ -34,6 +35,7 @@ export type SetPlayerDataEventInput = { player: Player }
 export type SetPlayerDataEventResponse = { player: Player }
 
 export type CreateGameEventResponse = { gameId: string }
+export type CreateSuperGameEventResponse = { gameId: string }
 
 export type JoinGameEventInput = { gameId: string }
 export type JoinGameEventResponse = { game: Game, chat: Chat }

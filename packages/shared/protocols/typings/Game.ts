@@ -43,6 +43,7 @@ export type Game = {
 	maxPlayers: number
 	status: GameStatus
 	round: number
+	super: number
 	id: string
 	chatId: string
 	currentPlayerIndex: number

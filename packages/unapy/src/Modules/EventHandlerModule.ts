@@ -12,6 +12,7 @@ import {
     SetPlayerDataEventInput,
     SetPlayerDataEventResponse,
     CreateGameEventResponse,
+    CreateSuperGameEventResponse,
     JoinGameEventInput,
     JoinGameEventResponse,
     BuyCardEventInput,
@@ -62,6 +63,35 @@ class EventHandlerModule {
                         const chat = await ChatService.setupChat(playerData.id);
 
                         game = await GameService.setupGame(
+                            playerData.id,
+                            chat.id
+                        );
+                    }
+
+                    SocketService.setupListener(client, "game", game.id);
+                    SocketService.setupListener(client, "chat", game.chatId);
+
+                    return {
+                        gameId: game.id,
+                    };
+                }
+            );
+
+            SocketService.on<unknown, CreateSuperGameEventResponse>(
+                client,
+                "CreateSuperGame",
+                async () => {
+                    let game = await GameService.getExistingPlayerGame(
+                        playerData.id
+                    );
+
+                    /**
+                     * Prevent players from creating a lot of games.
+                     */
+                    if (!game) {
+                        const chat = await ChatService.setupChat(playerData.id);
+
+                        game = await GameService.setupSuperGame(
                             playerData.id,
                             chat.id
                         );

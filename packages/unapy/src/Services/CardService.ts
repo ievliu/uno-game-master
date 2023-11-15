@@ -28,10 +28,33 @@ class CardService {
         "yellow",
     ];
 
+    private readonly cardSuperTypes: CardTypes[] = [
+        "block",
+        "buy-2",
+        "reverse",
+    ];
+
+    private readonly cardSuperColors: CardColors[] = [
+        "blue",
+        "green"
+    ];
+
     async setupRandomCards(): Promise<CardData[]> {
         const randomCards: CardData[] = [
             ...(await this.getCardStack()),
             ...(await this.getCardStack()),
+        ];
+
+        ArrayUtil.shuffle(randomCards);
+
+        return randomCards;
+    }
+
+    async setupRandomSuperCards(): Promise<CardData[]> {
+        const randomCards: CardData[] = [
+            ...(await this.getSuperCardStack()),
+            ...(await this.getSuperCardStack()),
+            ...(await this.getSuperCardStack()),
         ];
 
         ArrayUtil.shuffle(randomCards);
@@ -56,6 +79,30 @@ class CardService {
             this.cardColors.map((cardColor) => {
                 cardStack.push(
                     cardFactory.createNormalCard(cardType, cardColor)
+                );
+            });
+        });
+
+        for (let i = 0; i < 2; i++) {
+            cardStack.push(cardFactory.createBuyFourCard());
+        }
+
+        for (let i = 0; i < 2; i++) {
+            cardStack.push(cardFactory.createChangeColorCard());
+        }
+
+        return cardStack;
+    }
+
+    async getSuperCardStack(): Promise<CardData[]> {
+        const cardStack: CardData[] = [];
+
+        const cardFactory = new CardFactory();
+
+        this.cardSuperTypes.map((cardSuperType) => {
+            this.cardSuperColors.map((cardSuperColor) => {
+                cardStack.push(
+                    cardFactory.createNormalCard(cardSuperType, cardSuperColor)
                 );
             });
         });

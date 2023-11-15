@@ -67,6 +67,7 @@ class GameService {
 			type: "public",
 			status: "waiting",
 			round: 0,
+			super: 0,
 			id: CryptUtil.makeShortUUID(),
 			chatId,
 			currentPlayerIndex: 0,
@@ -83,6 +84,41 @@ class GameService {
 				amountToBuy: 0,
 			},
 			maxRoundDurationInSeconds: environmentConfig.isDev ? 100 : 30,
+			createdAt: Date.now(),
+		}
+
+		await this.setGameData(game.id, game)
+
+		return game
+	}
+
+	async setupSuperGame (playerId: string, chatId: string): Promise<Game> {
+		const cards = await CardService.setupRandomSuperCards()
+
+		const playerData = await PlayerService.getPlayerData(playerId)
+
+		const game: Game = {
+			maxPlayers: 4,
+			type: "public",
+			status: "waiting",
+			round: 0,
+			super: 1,
+			id: CryptUtil.makeShortUUID(),
+			chatId,
+			currentPlayerIndex: 0,
+			nextPlayerIndex: 1,
+			currentGameColor: null,
+			title: playerData.name + " Super Game",
+			availableCards: [],
+			usedCards: [],
+			players: [],
+			cards,
+			direction: "clockwise",
+			currentCardCombo: {
+				cardTypes: [],
+				amountToBuy: 0,
+			},
+			maxRoundDurationInSeconds: environmentConfig.isDev ? 10 : 10,
 			createdAt: Date.now(),
 		}
 
