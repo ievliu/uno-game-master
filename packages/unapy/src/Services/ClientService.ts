@@ -3,7 +3,14 @@ import PlayerService from "@/Services/PlayerService"
 import SocketService from "@/Services/SocketService"
 import { GameHistoryConsolidatedEventData } from "@uno-game/protocols"
 
-class ClientService {
+class ClientService  implements GameObserver {
+	update(event: string, data: any): void {
+		if (event === "GameHistoryConsolidated") {
+		  this.dispatchGameHistoryConsolidated();
+		} else if (event === "GameListUpdated") {
+		  this.dispatchGameListUpdated();
+		}
+	  }
 	async dispatchGameHistoryConsolidated (playerId?: string): Promise<void> {
 		let connectedPlayerIds: string[] = []
 

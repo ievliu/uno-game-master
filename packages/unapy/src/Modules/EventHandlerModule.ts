@@ -24,11 +24,12 @@ import {
 
 class EventHandlerModule {
     clients: Map<string, Socket> = new Map();
-
+    
+    
     onConnection(client: Socket) {
         try {
             let playerData = {} as Player;
-
+            GameService.addObserver(ClientService);
             SocketService.on<
                 SetPlayerDataEventInput,
                 SetPlayerDataEventResponse
