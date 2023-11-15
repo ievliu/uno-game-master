@@ -43,8 +43,6 @@ import CryptUtil from "@/Utils/CryptUtil"
 class GameService {
 	private observers: GameObserver[] = [];
 
-  // ... existing code ...
-
   addObserver(observer: GameObserver): void {
     this.observers.push(observer);
   }
