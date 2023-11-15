@@ -41,6 +41,24 @@ import GameRepository from "@/Repositories/GameRepository"
 import CryptUtil from "@/Utils/CryptUtil"
 
 class GameService {
+	private observers: GameObserver[] = [];
+
+  // ... existing code ...
+
+  addObserver(observer: GameObserver): void {
+    this.observers.push(observer);
+  }
+
+  removeObserver(observer: GameObserver): void {
+    const index = this.observers.indexOf(observer);
+    if (index !== -1) {
+      this.observers.splice(index, 1);
+    }
+  }
+
+  private notifyObservers(event: string, data: any): void {
+    this.observers.forEach(observer => observer.update(event, data));
+  }
 	async setupGame (playerId: string, chatId: string): Promise<Game> {
 		const cards = await CardService.setupRandomCards()
 
@@ -313,24 +331,23 @@ class GameService {
 		await this.setGameData(gameId, game)
 	}
 
-	emitGameEvent<Data extends unknown> (gameId: string, event: GameEvents, data: Data) {
-		SocketService.emitRoomEvent("game", gameId, event, data)
-
+	emitGameEvent<Data extends unknown>(gameId: string, event: GameEvents, data: Data) {
+		SocketService.emitRoomEvent("game", gameId, event, data);
+	
 		const gameUpdateEvents: GameEvents[] = [
-			"GameStarted",
-			"GameCreated",
-			"GameEnded",
-			"PlayerJoined",
-			"PlayerLeft",
-		]
-
-		const isGameUpdateEvent = gameUpdateEvents.some(gameEvent => gameEvent === event)
-
+		  "GameStarted",
+		  "GameCreated",
+		  "GameEnded",
+		  "PlayerJoined",
+		  "PlayerLeft",
+		];
+	
+		const isGameUpdateEvent = gameUpdateEvents.some(gameEvent => gameEvent === event);
+	
 		if (isGameUpdateEvent) {
-			ClientService.dispatchGameHistoryConsolidated()
-			ClientService.dispatchGameListUpdated()
+		  this.notifyObservers(event, data);
 		}
-	}
+	  }
 
 	private async makeComputedPlay (gameId: string, playerId: string): Promise<void> {
 		const game = await this.getGame(gameId)
