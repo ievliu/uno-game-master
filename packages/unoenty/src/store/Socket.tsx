@@ -240,6 +240,10 @@ const SocketProvider: React.FC = (props) => {
 
 				const updatedData = { ...lastState }
 
+				cards.forEach(card => {
+					updatedData.availableCards.shift()
+				})
+
 				updatedData.players = updatedData.players.map(player => {
 					if (player.id === playerId) {
 						cards.forEach(card => {
@@ -274,6 +278,7 @@ const SocketProvider: React.FC = (props) => {
 					if (consolidatedPlayer) {
 						player.isCurrentRoundPlayer = consolidatedPlayer.isCurrentRoundPlayer
 						player.canBuyCard = consolidatedPlayer.canBuyCard
+						player.canCloneCard = consolidatedPlayer.canCloneCard
 
 						player.handCards = player.handCards.map(handCard => {
 							const consolidatedHandCard = consolidatedPlayer.handCards.find(({ id }) => id === handCard.id)

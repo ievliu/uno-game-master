@@ -28,6 +28,7 @@ import {
 	GameStartedEventData,
 	PlayerToggledReadyEventData,
 	PlayerPutCardEventData,
+	PlayerClonedCardEventData,
 	PlayerChoseCardColorEventData,
 	GameRoundRemainingTimeChangedEventData,
 	PlayerBoughtCardEventData,
@@ -166,19 +167,40 @@ class GameService {
 		if (gameHasNotStarted && gameIsNotFull && playerIsNotOnGame) {
 			const playerData = await PlayerService.getPlayerData(playerId)
 
-			const player: PlayerData = {
-				id: playerId,
-				name: playerData.name,
-				handCards: [],
-				status: "online",
-				ready: false,
-				isCurrentRoundPlayer: false,
-				canBuyCard: false,
+			if	(game.super == 0) {
+				const player: PlayerData = {
+					id: playerId,
+					name: playerData.name,
+					handCards: [],
+					status: "online",
+					ready: false,
+					isCurrentRoundPlayer: false,
+					canBuyCard: false,
+					canCloneCard: false,
+					isSuper: false,
+				}
+	
+				game.players.push(player)
+	
+				this.emitGameEvent<PlayerJoinedEventData>(game.id, "PlayerJoined", { player })
+			} else {
+				const player: PlayerData = {
+					id: playerId,
+					name: playerData.name,
+					handCards: [],
+					status: "online",
+					ready: false,
+					isCurrentRoundPlayer: false,
+					canBuyCard: false,
+					canCloneCard: false,
+					isSuper: true,
+				}
+	
+				game.players.push(player)
+	
+				this.emitGameEvent<PlayerJoinedEventData>(game.id, "PlayerJoined", { player })
 			}
-
-			game.players.push(player)
-
-			this.emitGameEvent<PlayerJoinedEventData>(game.id, "PlayerJoined", { player })
+			
 		}
 
 		const gameRoundRemainingTimeInSeconds = await this.getRoundRemainingTimeInSeconds(gameId)
@@ -254,11 +276,11 @@ class GameService {
 
 		const player = game?.players?.find(player => player.id === currentPlayerInfo.id)
 
-		const needToBuyCard = player?.handCards?.every(card => !card.canBeUsed)
+		// const needToBuyCard = player?.handCards?.every(card => !card.canBeUsed)
 
-		if (!needToBuyCard) {
-			return
-		}
+		// if (!needToBuyCard) {
+		// 	return
+		// }
 
 		const available = [...game?.availableCards]
 
@@ -343,10 +365,16 @@ class GameService {
 		ArrayUtil.shuffle(outStackCards)
 
 		game.usedCards = inStackCards
-		game.availableCards = [
-			...game.availableCards,
-			...outStackCards,
-		]
+		if (game.super == 1) {
+			game.availableCards = [
+				...game.availableCards
+			]
+		} else {
+			game.availableCards = [
+				...game.availableCards,
+				...outStackCards,
+			]
+		}
 
 		game.currentGameColor = cards[0]?.color
 
@@ -355,6 +383,82 @@ class GameService {
 		await this.setGameData(gameId, game)
 
 		await this.nextRound(gameId)
+	}
+
+	async cloneCard (playerId: string, gameId: string): Promise<void> {
+		const game = await this.getGame(gameId)
+
+		const currentPlayerInfo = await this.getCurrentPlayerInfo(game)
+
+		if (currentPlayerInfo.id !== playerId) {
+			return
+		}
+
+		const used = [...game?.usedCards]
+
+		const card = used[0]
+
+		this.emitGameEvent<PlayerBoughtCardEventData>(game.id, "PlayerBoughtCard", {
+			playerId: playerId,
+			cards: [card],
+		})
+
+		game.players = game?.players?.map(player => {
+			if (player.id === playerId) {
+				return {
+					...player,
+					handCards: [card, ...player?.handCards],
+				}
+			} else {
+				return player
+			}
+		})
+
+		game.players = await this.buildPlayersWithCardUsability(currentPlayerInfo.id, game)
+
+		await this.setGameData(gameId, game)
+
+		// const cards: CardData[] = []
+
+		// cards.push(game.usedCards[0])
+
+		// this.emitGameEvent<PlayerClonedCardEventData>(game.id, "PlayerClonedCard", { playerId, cards })
+
+		// /**
+		//  * We keep flowing the used cards back to stack, in order to help
+		//  * keeping the game up till someone wins it.
+		//  */
+		// const usedCards = [...cards, ...game?.usedCards]
+
+		// const inStackCards = usedCards.slice(0, 10).filter(card => card)
+		// let outStackCards = usedCards.slice(10, usedCards.length).filter(card => card)
+
+		// outStackCards = outStackCards.map(card => {
+		// 	if (card.color === "black") {
+		// 		return {
+		// 			...card,
+		// 			selectedColor: null,
+		// 			src: card.possibleColors.black,
+		// 		}
+		// 	} else {
+		// 		return card
+		// 	}
+		// })
+
+		// ArrayUtil.shuffle(outStackCards)
+
+		// game.usedCards = inStackCards
+		// game.availableCards = [
+		// 	...game.availableCards
+		// ]
+
+		// game.currentGameColor = cards[0]?.color
+
+		// game = await this.buildGameWithCardEffect(game, cards, game.currentGameColor)
+
+		// await this.setGameData(gameId, game)
+
+		// await this.nextRound(gameId)
 	}
 
 	async changePlayerStatus (gameId: string, playerId: string, playerStatus: PlayerStatus): Promise<void> {
@@ -496,6 +600,8 @@ class GameService {
 					canBeUsed: player.id === currentPlayer.id,
 				})),
 				canBuyCard: false,
+				canCloneCard: false,
+				isSuper: game.super == 0 ? false : true, 
 			}
 		})
 
@@ -523,6 +629,8 @@ class GameService {
 				ready: false,
 				isCurrentRoundPlayer: false,
 				canBuyCard: false,
+				canCloneCard: false,
+				isSuper: game.super == 0 ? false : true,
 			},
 		]
 
@@ -737,6 +845,22 @@ class GameService {
 					}
 				})
 
+				// if	(available.length <= 0) {
+				// 	const bestPlayer = game.players.reduce(
+				// 		(prev, current) => {
+				// 		  return prev.handCards.length < current.handCards.length ? prev : current
+				// 		}
+				// 	  );
+				// 	game.players = game?.players?.map(player => {
+				// 		if	(player.id == bestPlayer.id) {
+				// 			return {
+				// 				...player,
+								
+				// 			}
+				// 		}
+				// 	}
+				// }
+
 				game.availableCards = available
 
 				game.currentCardCombo = {
@@ -782,6 +906,8 @@ class GameService {
 					...player,
 					isCurrentRoundPlayer: true,
 					canBuyCard: handCards.every(card => !card.canBeUsed),
+					canCloneCard: true,
+					isSuper: game.super == 0 ? false : true,
 					handCards,
 				}
 			} else {
@@ -789,6 +915,8 @@ class GameService {
 					...player,
 					isCurrentRoundPlayer: false,
 					canBuyCard: false,
+					isSuper: game.super == 0 ? false : true,
+					canCloneCard: false,
 					handCards: player?.handCards?.map(handCard => ({
 						...handCard,
 						canBeUsed: false,
@@ -809,6 +937,8 @@ class GameService {
 				id: player.id,
 				isCurrentRoundPlayer: player.isCurrentRoundPlayer,
 				canBuyCard: player.canBuyCard,
+				isSuper: player.isSuper,
+				canCloneCard: player.canCloneCard,
 				handCards,
 			}
 		})
@@ -828,6 +958,12 @@ class GameService {
 		const currentPlayerId = currentPlayer?.id
 		let gameStatus: CurrentPlayerGameStatus
 
+		const bestPlayer = game.players.reduce(
+					(prev, current) => {
+					  return prev.handCards.length < current.handCards.length ? prev : current
+					}
+				  );
+
 		/**
 		 * In case the current player has no card on hand, he's the winner
 		 */
@@ -836,7 +972,10 @@ class GameService {
 		/**
 		 * In case the player has only one card, he's made uno
 		 */
-		} else if (currentPlayer?.handCards.length === 1) {
+		} else if (bestPlayer.id === currentPlayer.id && game.availableCards.length <= 0) {
+			gameStatus = "winner"
+		} 
+		else if (currentPlayer?.handCards.length === 1) {
 			gameStatus = "uno"
 		}
 
@@ -879,6 +1018,8 @@ class GameService {
 		game.players = game?.players?.map(player => ({
 			...player,
 			canBuyCard: false,
+			canCloneCard: false,
+			isSuper: game.super == 0 ? false : true,
 			handCards: [],
 			isCurrentRoundPlayer: false,
 			ready: false,

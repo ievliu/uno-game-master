@@ -41,6 +41,8 @@ const Table: React.FC = () => {
 	const socket = useSocket()
 	const classes = useStyles()
 
+	const availableCards = socketStore?.game?.availableCards as CardData[]
+
 	const [loadingTable, setLoadingTable] = useState(true)
 
 	const toggleRetry = () => {
@@ -221,10 +223,9 @@ const Table: React.FC = () => {
 									className={classes.cardDeckPlaceholder}
 								>
 									<Grid container justify="flex-end">
-										<CardDeckPlaceholder
-											position="right"
-											player={socket.layoutedOtherPlayers.right}
-										/>
+										{socket?.currentPlayer?.isSuper && (
+										<p style={{ color: 'white' }}>Cards left {availableCards.length}</p>
+										)}
 									</Grid>
 								</Grid>
 							</Grid>

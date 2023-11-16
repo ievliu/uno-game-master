@@ -12,6 +12,7 @@ export type SocketServerEvents =
 "JoinGame" |
 "BuyCard" |
 "PutCard" |
+"CloneCard" |
 "SendChatMessage" |
 "ChangePlayerStatus" |
 "ToggleReady" |
@@ -43,6 +44,7 @@ export type JoinGameEventResponse = { game: Game, chat: Chat }
 export type BuyCardEventInput = { gameId: string }
 
 export type PutCardEventInput = { gameId: string, cardIds: string[], selectedColor: CardColors }
+export type CloneCardEventInput = { gameId: string }
 
 export type SendChatMessageEventInput = { chatId: string, message: string }
 
@@ -75,6 +77,7 @@ export type PlayerToggledReadyEventData = { playerId: string, ready: boolean }
 export type NewMessageEventData = { chatId: string, message: ChatMessage }
 
 export type PlayerPutCardEventData = { playerId: string, cards: CardData[] }
+export type PlayerClonedCardEventData = { playerId: string, cards: CardData[] }
 
 export type PlayerChoseCardColorEventData = { cards: CardData[] }
 
@@ -89,6 +92,8 @@ export type PlayerCardUsabilityConsolidatedEventData = {
 		id: string
 		isCurrentRoundPlayer: boolean
 		canBuyCard: boolean
+		isSuper: boolean
+		canCloneCard: boolean
 		handCards: Array<{
 			id: string
 			canBeUsed: boolean

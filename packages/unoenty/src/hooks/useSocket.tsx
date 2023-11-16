@@ -12,6 +12,7 @@ import {
 	JoinGameEventResponse,
 	BuyCardEventInput,
 	PutCardEventInput,
+	CloneCardEventInput,
 	SendChatMessageEventInput,
 	ChangePlayerStatusEventInput,
 	ToggleReadyEventInput,
@@ -36,6 +37,7 @@ type UseSocketResponse = {
 	toggleReady: (gameId: string) => void
 	buyCard: (gameId: string) => void
 	putCard: (gameId: string, cardIds: string[], selectedColor: CardColors) => void
+	cloneCard: (gameId: string) => void
 	toggleOnlineStatus: (gameId: string) => void
 	sendChatMessage: (chatId: string, content: string) => void
 	onGameStart: (fn: () => void) => void
@@ -211,6 +213,37 @@ const useSocket = (): UseSocketResponse => {
 		})
 	}
 
+	const cloneCard = async (gameId: string) => {
+		await SocketService.emit<CloneCardEventInput, unknown>("CloneCard", { gameId })
+		// SocketService.emit<CloneCardEventInput, unknown>("CloneCard", {
+		// 	gameId
+		// })
+
+		// /**
+		//  * Little trick to improve response time
+		//  */
+		// const player = socketStore?.game?.players?.find(player => player.id === socketStore?.player?.id)
+
+		// if (!player) {
+		// 	return
+		// }
+
+		// const cards: CardData[] = []
+
+		// cards.push(socketStore?.game?.usedCards[0] as CardData)
+
+		// socketStore.setGameData({
+		// 	...socketStore?.game as Game,
+		// 	players: socketStore?.game?.players?.map(player => {
+		// 		return player
+		// 	}) as PlayerData[],
+		// 	usedCards: [
+		// 		...cards,
+		// 		...socketStore?.game?.usedCards as CardData[],
+		// 	],
+		// })
+	}
+
 	const toggleOnlineStatus = async (gameId: string) => {
 		await SocketService.emit<ChangePlayerStatusEventInput, unknown>("ChangePlayerStatus", {
 			gameId,
@@ -326,6 +359,7 @@ const useSocket = (): UseSocketResponse => {
 		toggleReady,
 		buyCard,
 		putCard,
+		cloneCard,
 		forceSelfDisconnect,
 		getChat,
 		onGameListUpdated,

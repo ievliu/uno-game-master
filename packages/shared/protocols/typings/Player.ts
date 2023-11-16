@@ -23,6 +23,8 @@ export type PlayerData = Player & {
 	ready: boolean
 	isCurrentRoundPlayer: boolean
 	canBuyCard: boolean
+	canCloneCard: boolean
+	isSuper: boolean
 }
 
 export type CurrentPlayerGameStatus = "uno" | "winner" | "afk"

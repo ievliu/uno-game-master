@@ -18,6 +18,7 @@ export type GameEvents =
 "GameListUpdated" |
 "PlayerToggledReady" |
 "PlayerPutCard" |
+"PlayerClonedCard" |
 "PlayerChoseCardColor" |
 "PlayerBoughtCard" |
 "PlayerCardUsabilityConsolidated" |

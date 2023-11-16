@@ -40,6 +40,10 @@ const CardStack: React.FC<CardStackProps> = (props) => {
 		socket.putCard(game.id, cardIds, selectedColor)
 	}
 
+	const cloneCard = () => {
+		socket.cloneCard(game.id)
+	}
+
 	const handleDrop = async (card: DraggedCardItem) => {
 		let selectedColor = "" as CardColors
 
@@ -111,6 +115,22 @@ const CardStack: React.FC<CardStackProps> = (props) => {
 						/>
 					</Grid>
 				</Zoom>
+
+				{socket?.currentPlayer?.canCloneCard && socket?.currentPlayer?.isSuper && (
+				<Grid
+						container
+						justify="center"
+						className={classes.buyCardContainer}
+					>
+						<Button
+							variant="contained"
+							onClick={cloneCard}
+							className={classes.buyCardButton}
+						>
+							CLONE CARD
+						</Button>
+					</Grid>
+				)}
 
 				{socket?.currentPlayer?.canBuyCard && (
 					<Grid

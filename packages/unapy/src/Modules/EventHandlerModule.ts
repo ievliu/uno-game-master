@@ -17,6 +17,7 @@ import {
     JoinGameEventResponse,
     BuyCardEventInput,
     PutCardEventInput,
+    CloneCardEventInput,
     SendChatMessageEventInput,
     ChangePlayerStatusEventInput,
     ToggleReadyEventInput,
@@ -143,6 +144,17 @@ class EventHandlerModule {
                         cardIds,
                         gameId,
                         selectedColor
+                    );
+                }
+            );
+
+            SocketService.on<CloneCardEventInput, unknown>(
+                client,
+                "CloneCard",
+                async ({ gameId }) => {
+                    await GameService.cloneCard(
+                        playerData.id,
+                        gameId
                     );
                 }
             );
