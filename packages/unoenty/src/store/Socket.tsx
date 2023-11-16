@@ -240,9 +240,12 @@ const SocketProvider: React.FC = (props) => {
 
 				const updatedData = { ...lastState }
 
-				cards.forEach(card => {
-					updatedData.availableCards.shift()
-				})
+				if	(updatedData.super !== 1 || updatedData.usedCards[0].id !== cards[0].id) {
+					cards.forEach(card => {
+						updatedData.availableCards.shift()
+					})
+				}
+				
 
 				updatedData.players = updatedData.players.map(player => {
 					if (player.id === playerId) {
