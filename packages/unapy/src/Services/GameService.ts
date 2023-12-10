@@ -61,10 +61,14 @@ class GameService {
   }
 
   
-	async setupGame (playerId: string, chatId: string): Promise<Game> {
-		const cards = await CardService.setupRandomCards()
-
+	async setupGame (playerId: string, chatId: string): Promise<Game> {		
+		const cardsIterator = CardService.setupRandomCardsIterator();
 		const playerData = await PlayerService.getPlayerData(playerId)
+		const cards: CardData[] = [];
+
+		for await (const card of cardsIterator) {
+            cards.push(card);
+        }
 
 		const game: Game = {
 			maxPlayers: 8,
@@ -97,10 +101,15 @@ class GameService {
 		return game
 	}
 
-	async setupSuperGame (playerId: string, chatId: string): Promise<Game> {
-		const cards = await CardService.setupRandomSuperCards()
-
+	async setupSuperGame (playerId: string, chatId: string): Promise<Game> {		
+		const cardsIterator = CardService.setupRandomSuperCardsIterator();
 		const playerData = await PlayerService.getPlayerData(playerId)
+
+		const cards: CardData[] = [];
+
+		for await (const card of cardsIterator) {
+            cards.push(card);
+        }
 
 		const game: Game = {
 			maxPlayers: 4,
@@ -134,9 +143,14 @@ class GameService {
 	}
 
 	async setupBoringGame (playerId: string, chatId: string): Promise<Game> {
-		const cards = await CardService.setupCustomCards()
-
+		const cardsIterator = CardService.setupCustomCardsIterator();
 		const playerData = await PlayerService.getPlayerData(playerId);
+
+		const cards: CardData[] = [];
+
+		for await (const card of cardsIterator) {
+            cards.push(card);
+        }
 
 		const game: Game = {
 			maxPlayers: 2,
