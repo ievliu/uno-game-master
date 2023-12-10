@@ -2,7 +2,7 @@ import ArrayUtil from "@/Utils/ArrayUtil";
 
 import { CardColors, CardData, CardTypes } from "@uno-game/protocols";
 
-import { CardFactory } from "@/Factories/CardFactory";
+import { CardFactoryWithProxy as CardFactory } from "@/Factories/CardFactory";
 
 class CardService {
     private readonly cardTypes: CardTypes[] = [
