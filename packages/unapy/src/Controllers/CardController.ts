@@ -1,16 +1,28 @@
-import CardService from "@/Services/CardService"
-import { Request, Response } from "express"
+import CardService from "@/Services/CardService";
+import { Request, Response } from "express";
 
 class CardController {
-	async getCardList (req: Request, res: Response) {
-		const cards = await CardService.getCardStack()
+    async getCardList(req: Request, res: Response) {
+        try {
+            console.log("Request received for getCardList");
 
-		const cardList = cards.map(card => ({ src: card.src }))
+            const cardIterator = CardService.setupRandomCardsIterator();
+            const cardList: { src: string }[] = [];
 
-		return res.status(200).json({
-			cards: cardList,
-		})
-	}
+            // Iterate over the cards
+            for await (const card of cardIterator) {
+                cardList.push({ src: card.src });
+            }
+
+            console.log("Sending response for getCardList");
+            return res.status(200).json({
+                cards: cardList,
+            });
+        } catch (error) {
+            console.error("Error retrieving card list:", error);
+            return res.status(500).json({ error: "Internal Server Error" });
+        }
+    }
 }
 
-export default new CardController()
+export default new CardController();

@@ -4,6 +4,21 @@ import { CardColors, CardData, CardTypes } from "@uno-game/protocols";
 
 import { CardFactoryWithProxy as CardFactory } from "@/Factories/CardFactory";
 
+
+class CardServiceIterator {
+    private index: number = 0;
+
+    constructor(private cards: CardData[]) {}
+
+    hasNext(): boolean {
+        return this.index < this.cards.length;
+    }
+
+    next(): CardData | null {
+        return this.hasNext() ? this.cards[this.index++] : null;
+    }
+}
+
 class CardService {
     private readonly cardTypes: CardTypes[] = [
         "0",
@@ -116,6 +131,23 @@ class CardService {
         }
 
         return cardStack;
+    }
+
+    async *cardIterator(cardStack: CardData[]): AsyncGenerator<CardData> {
+        const iterator = new CardServiceIterator(cardStack);
+        while (iterator.hasNext()) {
+            yield iterator.next()!;
+        }
+    }
+
+    async *setupRandomCardsIterator(): AsyncGenerator<CardData> {
+        const randomCards = await this.setupRandomCards();
+        yield* this.cardIterator(randomCards);
+    }
+
+    async *setupRandomSuperCardsIterator(): AsyncGenerator<CardData> {
+        const randomSuperCards = await this.setupRandomSuperCards();
+        yield* this.cardIterator(randomSuperCards);
     }
 }
 
