@@ -4,20 +4,11 @@ import { CardColors, CardData, CardTypes } from "@uno-game/protocols";
 
 import { CardFactoryWithProxy as CardFactory } from "@/Factories/CardFactory";
 
+import { Iterator } from "@/Iterator/Iterator";
+import { CustomCardIterator } from "@/Iterator/CustomCardIterator";
+import { NormalCardIterator } from "@/Iterator/NormalCardIterator";
+import { SuperCardIterator } from "@/Iterator/SuperCardIterator";
 
-class CardServiceIterator {
-    private index: number = 0;
-
-    constructor(private cards: CardData[]) {}
-
-    hasNext(): boolean {
-        return this.index < this.cards.length;
-    }
-
-    next(): CardData | null {
-        return this.hasNext() ? this.cards[this.index++] : null;
-    }
-}
 
 class CardService {
     private readonly cardTypes: CardTypes[] = [
@@ -54,6 +45,22 @@ class CardService {
         "green"
     ];
 
+    private readonly CustomcardTypes: CardTypes[] = [
+        "0",
+        "1",
+        "2",
+        "3",
+        "4",
+        "5",
+        "6",
+        "7",
+        "8",
+        "9"
+    ];
+
+
+
+
     async setupRandomCards(): Promise<CardData[]> {
         const randomCards: CardData[] = [
             ...(await this.getCardStack()),
@@ -70,6 +77,18 @@ class CardService {
             ...(await this.getSuperCardStack()),
             ...(await this.getSuperCardStack()),
             ...(await this.getSuperCardStack()),
+        ];
+
+        ArrayUtil.shuffle(randomCards);
+
+        return randomCards;
+    }
+
+    async setupCustomCards(): Promise<CardData[]> {
+        const randomCards: CardData[] = [
+            ...(await this.getCustomStack()),
+            ...(await this.getCustomStack()),
+            ...(await this.getCustomStack()),
         ];
 
         ArrayUtil.shuffle(randomCards);
@@ -133,21 +152,53 @@ class CardService {
         return cardStack;
     }
 
-    async *cardIterator(cardStack: CardData[]): AsyncGenerator<CardData> {
-        const iterator = new CardServiceIterator(cardStack);
-        while (iterator.hasNext()) {
-            yield iterator.next()!;
+    async getCustomStack(): Promise<CardData[]> {
+        const cardStack: CardData[] = [];
+
+        const cardFactory = new CardFactory();
+
+        this.CustomcardTypes.map((CustomcardTypes) => {
+            this.cardColors.map((cardColors) => {
+                cardStack.push(
+                    cardFactory.createNormalCard(CustomcardTypes, cardColors)
+                );
+            });
+        });
+
+        for (let i = 0; i < 2; i++) {
+            cardStack.push(cardFactory.createBuyFourCard());
+        }
+
+        for (let i = 0; i < 2; i++) {
+            cardStack.push(cardFactory.createChangeColorCard());
+        }
+
+        return cardStack;
+    }
+
+    async *cardIterator(cardStack: CardData[], iterator: Iterator<CardData>): AsyncGenerator<CardData> {
+        const cardServiceIterator = iterator;
+        while (cardServiceIterator.hasNext()) {
+            yield cardServiceIterator.next()!;
         }
     }
 
     async *setupRandomCardsIterator(): AsyncGenerator<CardData> {
         const randomCards = await this.setupRandomCards();
-        yield* this.cardIterator(randomCards);
+        const normalCardIterator = new NormalCardIterator(randomCards);
+        yield* this.cardIterator(randomCards, normalCardIterator);
     }
 
     async *setupRandomSuperCardsIterator(): AsyncGenerator<CardData> {
         const randomSuperCards = await this.setupRandomSuperCards();
-        yield* this.cardIterator(randomSuperCards);
+        const superCardIterator = new SuperCardIterator(randomSuperCards);
+        yield* this.cardIterator(randomSuperCards, superCardIterator);
+    }
+
+    async *setupCustomCardsIterator(): AsyncGenerator<CardData> {
+        const customCards = await this.setupCustomCards();
+        const customCardIterator = new CustomCardIterator(customCards);
+        yield* this.cardIterator(customCards, customCardIterator);
     }
 }
 

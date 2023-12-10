@@ -9,6 +9,7 @@ export type SocketServerEvents =
 "SetPlayerData" |
 "CreateGame" |
 "CreateSuperGame" |
+"CreateBoringGame" |
 "JoinGame" |
 "BuyCard" |
 "PutCard" |
@@ -37,6 +38,7 @@ export type SetPlayerDataEventResponse = { player: Player }
 
 export type CreateGameEventResponse = { gameId: string }
 export type CreateSuperGameEventResponse = { gameId: string }
+export type CreateBoringGameEventResponse = { gameId: string }
 
 export type JoinGameEventInput = { gameId: string }
 export type JoinGameEventResponse = { game: Game, chat: Chat }

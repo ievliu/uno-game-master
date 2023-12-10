@@ -8,6 +8,7 @@ import {
 import {
 	CreateGameEventResponse,
 	CreateSuperGameEventResponse,
+	CreateBoringGameEventResponse,
 	Game,
 } from "@uno-game/protocols"
 
@@ -53,6 +54,16 @@ const Dashboard: React.FC = () => {
 		setLoadingCreateGame(true)
 
 		const { gameId } = await SocketService.emit<unknown, CreateSuperGameEventResponse>("CreateSuperGame", {})
+
+		setLoadingCreateGame(false)
+
+		history.push(`/${gameId}`)
+	}
+
+	const handleCreateNewBoringGame = async () => {
+		setLoadingCreateGame(true)
+
+		const { gameId } = await SocketService.emit<unknown, CreateBoringGameEventResponse>("CreateBoringGame", {})
 
 		setLoadingCreateGame(false)
 
@@ -135,6 +146,22 @@ const Dashboard: React.FC = () => {
 						disabled={loadingCreateGame}
 					>
 						{loadingCreateGame ? "CREATING..." : "CREATE NEW SUPER GAME"}
+					</Button>
+
+					{DeviceUtil.isMobile ? (
+						<Divider orientation="horizontal" size={3} />
+					) : (
+						<Divider orientation="vertical" size={5} />
+					)}
+
+					<Button
+						variant="contained"
+						color="primary"
+						startIcon={<CreateIcon />}
+						onClick={handleCreateNewBoringGame}
+						disabled={loadingCreateGame}
+					>
+						{loadingCreateGame ? "CREATING..." : "CREATE NEW BORING GAME"}
 					</Button>
 				</Grid>
 

@@ -9,7 +9,6 @@ class CardController {
             const cardIterator = CardService.setupRandomCardsIterator();
             const cardList: { src: string }[] = [];
 
-            // Iterate over the cards
             for await (const card of cardIterator) {
                 cardList.push({ src: card.src });
             }
