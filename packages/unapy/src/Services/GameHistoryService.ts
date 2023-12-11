@@ -1,10 +1,10 @@
 import { GameHistory } from "@uno-game/protocols";
-
 import GameService from "@/Services/GameService";
-
 import GameHistoryRepository from "@/Repositories/GameHistoryRepository";
 
 class GameHistoryService {
+    private gameMementos: Map<string, GameHistory[]> = new Map();
+
     async retrieveGameHistory(playerId: string): Promise<GameHistory[]> {
         const gameHistory = await this.consolidateGameHistory(playerId);
 
@@ -55,12 +55,15 @@ class GameHistoryService {
                 });
             });
 
-        await GameHistoryRepository.setGameHistory(
-            playerId,
-            consolidatedGameHistory
-        );
-
         return consolidatedGameHistory;
+    }
+
+    saveMemento(playerId: string, gameHistory: GameHistory[]): void {
+        this.gameMementos.set(playerId, [...gameHistory]);
+    }
+
+    restoreMemento(playerId: string): GameHistory[] | undefined {
+        return this.gameMementos.get(playerId);
     }
 }
 
