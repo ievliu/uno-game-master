@@ -37,7 +37,8 @@ const getTimeOfDay = () => {
 
 const Dashboard: React.FC = () => {
     const { state, dispatch } = useContext(DashboardStateContext);
-    const { games, loadingCreateGame, loadingGetGames } = state;
+    const { games, loadingCreateGame, loadingGetGames, greetingMessage } =
+        state;
 
     const history = useHistory();
     const classes = useStyles();
@@ -156,7 +157,7 @@ const Dashboard: React.FC = () => {
                         color="textSecondary"
                         className={classes.pageSubtitleContainer}
                     >
-                        {state.greetingMessage}
+                        {greetingMessage}
                     </Typography>
 
                     <Divider orientation="horizontal" size={4} />
