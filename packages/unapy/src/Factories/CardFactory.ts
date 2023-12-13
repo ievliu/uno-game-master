@@ -7,14 +7,49 @@ import {
 } from "@uno-game/protocols";
 import uuid from "uuid";
 
-export class CardFactory {
+class CardPictureFlyweight {
+    private pictureSrc: string;
+
+    constructor(cardType: CardTypes, cardColor: CardColors) {
+        const baseUrl = staticFilesConfig.staticFilesBaseUrl;
+        const picturePath = `cards/${cardType}/${cardColor}.svg`;
+        this.pictureSrc = `${baseUrl}/${picturePath}`;
+    }
+
+    getPictureSrc(): string {
+        return this.pictureSrc;
+    }
+}
+class CardPictureFlyweightProxy {
+    private realFlyweight: CardPictureFlyweight | null = null;
+
+    constructor(private cardType: CardTypes, private cardColor: CardColors) {}
+
+    getPictureSrc(): string {
+        if (!this.realFlyweight) {
+            this.realFlyweight = new CardPictureFlyweight(this.cardType, this.cardColor);
+        }
+        return this.realFlyweight.getPictureSrc();
+    }
+}
+export class CardFactoryWithProxy {
+    private flyweightProxies: Record<string, CardPictureFlyweightProxy> = {};
+
+    private getFlyweightProxy(cardType: CardTypes, cardColor: CardColors): CardPictureFlyweightProxy {
+        const key = `${cardType}-${cardColor}`;
+        if (!this.flyweightProxies[key]) {
+            this.flyweightProxies[key] = new CardPictureFlyweightProxy(cardType, cardColor);
+        }
+        return this.flyweightProxies[key];
+    }
+
     createNormalCard(cardType: CardTypes, cardColor: CardColors): CardData {
-        const cardPictureSrc = this.buildCardPictureSrc(cardType, cardColor);
+        const flyweightProxy = this.getFlyweightProxy(cardType, cardColor);
         const cardId = uuid.v4();
 
         return new CardDataBuilder()
             .setId(cardId)
-            .setSrc(cardPictureSrc)
+            .setSrc(flyweightProxy.getPictureSrc())
             .setName(`${cardType}-${cardColor}`)
             .setColor(cardColor)
             .setType(cardType)
@@ -22,28 +57,20 @@ export class CardFactory {
     }
 
     createBuyFourCard(): CardData {
-        const blackCardPictureSrc = this.buildCardPictureSrc("buy-4", "black");
-        const redCardPictureSrc = this.buildCardPictureSrc("buy-4", "red");
-        const blueCardPictureSrc = this.buildCardPictureSrc("buy-4", "blue");
-        const yellowCardPictureSrc = this.buildCardPictureSrc(
-            "buy-4",
-            "yellow"
-        );
-        const greenCardPictureSrc = this.buildCardPictureSrc("buy-4", "green");
-
+        const flyweightProxy = this.getFlyweightProxy("buy-4", "black");
         const possibleColors = {
-            red: redCardPictureSrc,
-            blue: blueCardPictureSrc,
-            yellow: yellowCardPictureSrc,
-            green: greenCardPictureSrc,
-            black: blackCardPictureSrc,
+            red: this.getFlyweightProxy("buy-4", "red").getPictureSrc(),
+            blue: this.getFlyweightProxy("buy-4", "blue").getPictureSrc(),
+            yellow: this.getFlyweightProxy("buy-4", "yellow").getPictureSrc(),
+            green: this.getFlyweightProxy("buy-4", "green").getPictureSrc(),
+            black: flyweightProxy.getPictureSrc(),
         };
 
         const cardId = uuid.v4();
 
         return new CardDataBuilder()
             .setId(cardId)
-            .setSrc(blackCardPictureSrc)
+            .setSrc(flyweightProxy.getPictureSrc())
             .setName("buy-4")
             .setColor("black")
             .setType("buy-4")
@@ -53,56 +80,25 @@ export class CardFactory {
     }
 
     createChangeColorCard(): CardData {
-        const blackCardPictureSrc = this.buildCardPictureSrc(
-            "change-color",
-            "black"
-        );
-        const redCardPictureSrc = this.buildCardPictureSrc(
-            "change-color",
-            "red"
-        );
-        const blueCardPictureSrc = this.buildCardPictureSrc(
-            "change-color",
-            "blue"
-        );
-        const yellowCardPictureSrc = this.buildCardPictureSrc(
-            "change-color",
-            "yellow"
-        );
-        const greenCardPictureSrc = this.buildCardPictureSrc(
-            "change-color",
-            "green"
-        );
-
+        const flyweightProxy = this.getFlyweightProxy("change-color", "black");
         const possibleColors = {
-            red: redCardPictureSrc,
-            blue: blueCardPictureSrc,
-            yellow: yellowCardPictureSrc,
-            green: greenCardPictureSrc,
-            black: blackCardPictureSrc,
+            red: this.getFlyweightProxy("change-color", "red").getPictureSrc(),
+            blue: this.getFlyweightProxy("change-color", "blue").getPictureSrc(),
+            yellow: this.getFlyweightProxy("change-color", "yellow").getPictureSrc(),
+            green: this.getFlyweightProxy("change-color", "green").getPictureSrc(),
+            black: flyweightProxy.getPictureSrc(),
         };
 
         const cardId = uuid.v4();
 
         return new CardDataBuilder()
             .setId(cardId)
-            .setSrc(blackCardPictureSrc)
+            .setSrc(flyweightProxy.getPictureSrc())
             .setName("change-color")
             .setColor("black")
             .setType("change-color")
             .setSelectedColor(null)
             .setPossibleColors(possibleColors)
             .build();
-    }
-
-    private buildCardPictureSrc(
-        cardType: CardTypes,
-        cardColor: CardColors
-    ): string {
-        const baseUrl = staticFilesConfig.staticFilesBaseUrl;
-
-        const picturePath = `cards/${cardType}/${cardColor}.svg`;
-
-        return `${baseUrl}/${picturePath}`;
     }
 }

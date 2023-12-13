@@ -40,6 +40,7 @@ import {
 import GameRepository from "@/Repositories/GameRepository"
 
 import CryptUtil from "@/Utils/CryptUtil"
+import { CustomCardIterator } from "@/Iterator/CustomCardIterator"
 
 class GameService {
 	private observers: GameObserver[] = [];
@@ -58,10 +59,16 @@ class GameService {
   private notifyObservers(event: string, data: any): void {
     this.observers.forEach(observer => observer.update(event, data));
   }
-	async setupGame (playerId: string, chatId: string): Promise<Game> {
-		const cards = await CardService.setupRandomCards()
 
+  
+	async setupGame (playerId: string, chatId: string): Promise<Game> {		
+		const cardsIterator = CardService.setupRandomCardsIterator();
 		const playerData = await PlayerService.getPlayerData(playerId)
+		const cards: CardData[] = [];
+
+		for await (const card of cardsIterator) {
+            cards.push(card);
+        }
 
 		const game: Game = {
 			maxPlayers: 8,
@@ -69,6 +76,7 @@ class GameService {
 			status: "waiting",
 			round: 0,
 			super: 0,
+			boring: 0,
 			id: CryptUtil.makeShortUUID(),
 			chatId,
 			currentPlayerIndex: 0,
@@ -93,10 +101,15 @@ class GameService {
 		return game
 	}
 
-	async setupSuperGame (playerId: string, chatId: string): Promise<Game> {
-		const cards = await CardService.setupRandomSuperCards()
-
+	async setupSuperGame (playerId: string, chatId: string): Promise<Game> {		
+		const cardsIterator = CardService.setupRandomSuperCardsIterator();
 		const playerData = await PlayerService.getPlayerData(playerId)
+
+		const cards: CardData[] = [];
+
+		for await (const card of cardsIterator) {
+            cards.push(card);
+        }
 
 		const game: Game = {
 			maxPlayers: 4,
@@ -104,6 +117,7 @@ class GameService {
 			status: "waiting",
 			round: 0,
 			super: 1,
+			boring:0,
 			id: CryptUtil.makeShortUUID(),
 			chatId,
 			currentPlayerIndex: 0,
@@ -123,6 +137,46 @@ class GameService {
 			createdAt: Date.now(),
 		}
 
+		await this.setGameData(game.id, game)
+
+		return game
+	}
+
+	async setupBoringGame (playerId: string, chatId: string): Promise<Game> {
+		const cardsIterator = CardService.setupCustomCardsIterator();
+		const playerData = await PlayerService.getPlayerData(playerId);
+
+		const cards: CardData[] = [];
+
+		for await (const card of cardsIterator) {
+            cards.push(card);
+        }
+
+		const game: Game = {
+			maxPlayers: 2,
+			type: "public",
+			status: "waiting",
+			round: 0,
+			super: 0,
+			boring:1,
+			id: CryptUtil.makeShortUUID(),
+			chatId,
+			currentPlayerIndex: 0,
+			nextPlayerIndex: 1,
+			currentGameColor: null,
+			title: playerData.name + " Boring Game",
+			availableCards: [],
+			usedCards: [],
+			players: [],
+			cards,
+			direction: "clockwise",
+			currentCardCombo: {
+				cardTypes: [],
+				amountToBuy: 0,
+			},
+			maxRoundDurationInSeconds: environmentConfig.isDev ? 10 : 10,
+			createdAt: Date.now(),
+		}
 		await this.setGameData(game.id, game)
 
 		return game
