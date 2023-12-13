@@ -5,18 +5,21 @@ export interface DashboardState {
     games: Game[];
     loadingCreateGame: boolean;
     loadingGetGames: boolean;
+    greetingMessage: string;
 }
 
 const initialState: DashboardState = {
     games: [],
     loadingCreateGame: false,
     loadingGetGames: true,
+    greetingMessage: "",
 };
 
 type DashboardAction =
     | { type: "SET_GAMES"; payload: Game[] }
     | { type: "SET_LOADING_CREATE_GAME"; payload: boolean }
-    | { type: "SET_LOADING_GET_GAMES"; payload: boolean };
+    | { type: "SET_LOADING_GET_GAMES"; payload: boolean }
+    | { type: "SET_GREETING_MESSAGE"; payload: string };
 
 export const DashboardStateContext = createContext<{
     state: DashboardState;
@@ -37,6 +40,8 @@ const reducer = (
             return { ...state, loadingCreateGame: action.payload };
         case "SET_LOADING_GET_GAMES":
             return { ...state, loadingGetGames: action.payload };
+        case "SET_GREETING_MESSAGE":
+            return { ...state, greetingMessage: action.payload };
         default:
             return state;
     }
