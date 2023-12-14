@@ -162,7 +162,7 @@ const Chat: React.FC = () => {
 					<Typography
 						variant="h6"
 					>
-						Chat
+						Console
 					</Typography>
 				</Grid>
 
@@ -193,7 +193,7 @@ const Chat: React.FC = () => {
 					<TextField
 						value={content}
 						onChange={({ target }) => handleChangeContent(target.value)}
-						placeholder="Type something..."
+						placeholder="Type command"
 						variant="outlined"
 						className={classes.messageInput}
 						size="small"

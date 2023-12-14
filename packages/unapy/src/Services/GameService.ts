@@ -42,8 +42,9 @@ import GameRepository from "@/Repositories/GameRepository"
 import CryptUtil from "@/Utils/CryptUtil"
 import { CustomCardIterator } from "@/Iterator/CustomCardIterator"
 
-class GameService {
+class GameService implements Mediator {
 	private observers: GameObserver[] = [];
+	private services: Service[] = [];
 
   addObserver(observer: GameObserver): void {
     this.observers.push(observer);
@@ -317,6 +318,16 @@ class GameService {
 
 	async getGameList (): Promise<Game[]> {
 		return await GameRepository.getGameList()
+	}
+
+	async addService(service: Service) {
+		this.services.push(service);
+	}
+
+	async sendMessage(message: string) {
+		this.services.forEach(service => {
+			service.receiveMessage(message)
+		});
 	}
 
 	async buyCard (playerId: string, gameId: string): Promise<void> {

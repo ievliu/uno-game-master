@@ -7,7 +7,7 @@ import {
 
 import GameRoundRepository from "@/Repositories/GameRoundRepository"
 
-class GameRoundService {
+class GameRoundService implements Service {
 	async getRoundRemainingTimeInSeconds (gameId: string): Promise<number> {
 		const gameRoundCounter = await GameRoundRepository.getGameRoundCounter(gameId)
 
@@ -75,6 +75,32 @@ class GameRoundService {
 
 	emitGameRoundEvent<Data extends unknown> (gameId: string, event: GameRoundEvents, data: Data) {
 		SocketService.emitRoomEvent("game", gameId, event, data)
+	}
+
+	sendMessage() {
+		return "Your time will run out soon"
+	}
+	receiveMessage(message: string) {
+		if (message[0] == "T") {
+			const gameRoundCounter =  GameRoundRepository.getGameRoundCounter("t1222")
+
+		if (gameRoundCounter) {
+
+			const currentTimeInMilliseconds = Date.now()
+
+			const passedTimeInSeconds = ((currentTimeInMilliseconds) / 1000)
+
+			if (passedTimeInSeconds > 1000) {
+				return passedTimeInSeconds
+			}
+
+			const remainingTimeInSeconds = Math.round(10000 - passedTimeInSeconds)
+
+			return remainingTimeInSeconds
+		}
+
+		return null
+		}
 	}
 }
 

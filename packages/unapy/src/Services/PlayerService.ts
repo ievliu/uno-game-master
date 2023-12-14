@@ -4,7 +4,7 @@ import PlayerRepository from "@/Repositories/PlayerRepository"
 
 import CryptUtil from "@/Utils/CryptUtil"
 
-class PlayerService {
+class PlayerService implements Service {
 	async setPlayerData (playerData: Player): Promise<Player> {
 		const player = {
 			id: playerData.id || CryptUtil.makeUUID(),
@@ -34,6 +34,17 @@ class PlayerService {
 		const playerIds = await PlayerRepository.getAllPlayerIds()
 
 		return playerIds
+	}
+
+
+	sendMessage() {
+		return "Player has uno"
+	}
+	async receiveMessage(message: string) {
+		if (message[0]=="P") {
+			const player = await this.getPlayerData(message);
+			this.setPlayerData(player);
+		}
 	}
 }
 

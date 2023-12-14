@@ -9,8 +9,10 @@ import {
 	SocketRoomNameMap,
 } from "@/Protocols/SocketProtocol"
 
-class SocketService {
+class SocketService implements Service {
 	private io: SocketServer
+
+	private expression: Expression
 
 	on<ReceivedData extends unknown, ResponseData extends unknown> (
 		client: SocketClient,
@@ -76,6 +78,17 @@ class SocketService {
 		if (typeof callback === "function") {
 			callback(error, data)
 		}
+	}
+
+	interpretCommand(context: Context) {
+		this.expression.interpret(context);
+	}
+
+	sendMessage() {
+		return "Game finished"
+	}
+	receiveMessage(message: String) {
+		this.emitEvent("t1d7-122", "connect", message);
 	}
 }
 
